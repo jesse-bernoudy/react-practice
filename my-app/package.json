@@ -1,6 +1,5 @@
 {
-  "dependencies": {
-    "global": "^4.4.0",
-    "npm": "^8.17.0"
-  }
+  "name": "my-app",
+  "version": "0.1.0",
+  "private": true
 }
