@@ -1,63 +1,6 @@
 import * as React from 'react';
 
-const initialStories = [
-  {
-    title: 'React',
-    url: 'https://reactjs.org/',
-    author: 'Jordan Walke',
-    num_comments: 3,
-    points: 4,
-    objectID: 0,
-  },
-  {
-    title: 'Redux',
-    url: 'https://redux.js.org/',
-    author: 'Dan Abramov, Andrew Clark',
-    num_comments: 2,
-    points: 5,
-    objectID: 1,
-  },
-  {
-    title: 'Redux2',
-    url: 'https://redux.js.org/',
-    author: 'Dan Abramov, Andrew Clark',
-    num_comments: 2,
-    points: 5,
-    objectID: 2,
-  },
-  {
-    title: 'Redux3',
-    url: 'https://redux.js.org/',
-    author: 'Dan Abramov, Andrew Clark',
-    num_comments: 2,
-    points: 5,
-    objectID: 3,
-  },
-  {
-    title: 'Redux4',
-    url: 'https://redux.js.org/',
-    author: 'Dan Abramov, Andrew Clark',
-    num_comments: 2,
-    points: 5,
-    objectID: 4,
-  },
-  {
-    title: 'React2',
-    url: 'https://reactjs.org/',
-    author: 'Jordan Walke',
-    num_comments: 3,
-    points: 4,
-    objectID: 5,
-  },
-  {
-    title: 'React3',
-    url: 'https://reactjs.org/',
-    author: 'Jordan Walke',
-    num_comments: 3,
-    points: 4,
-    objectID: 6,
-  },
-];
+const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
 
 const ACTIONS = {
   STORIES_FETCH_INIT: 'STORIES_FETCH_INIT',
@@ -65,14 +8,6 @@ const ACTIONS = {
   STORIES_FETCH_FAILURE: 'STORIES_FETCH_FAILURE',
   REMOVE_STORY: 'REMOVE_STORY'
 };
-
-const getAsyncStories = () =>
-  new Promise((resolve) =>
-    setTimeout(
-      () => resolve({ data: { stories: initialStories } }),
-      2000
-    )
-  );
   
 const useSemiPersistentState = (key, initialState) => {
     const [value, setValue] = React.useState(
@@ -131,20 +66,30 @@ const App = () => {
     { data: [], isLoading: false, isError: false }
   );
 
-  React.useEffect(() => {
+  const handleFetchStories = React.useCallback(() => {
+    if (!searchTerm) {
+      return;
+    }
+
     dispatchStories({ type: ACTIONS.STORIES_FETCH_INIT });
 
-    getAsyncStories()
+    fetch(`${API_ENDPOINT}${searchTerm}`)
+      .then((response) => response.json())
       .then((result) => {
         dispatchStories({
           type: ACTIONS.STORIES_FETCH_SUCCESS,
-          payload: result.data.stories,
+          payload: result.hits,
         });
       })
       .catch(() =>
         dispatchStories({ type: ACTIONS.STORIES_FETCH_FAILURE })
       );
-  }, []);
+  }, [searchTerm]);
+  
+
+  React.useEffect(() => {
+    handleFetchStories();
+  }, [handleFetchStories]);
 
   const handleRemoveStory = (item) => {
     dispatchStories({
@@ -176,7 +121,7 @@ const App = () => {
       {stories.isLoading ? (
         <p>Loading ...</p>
       ) : (
-        <List list={searchedStories}
+        <List list={stories.data}
           onRemoveItem={handleRemoveStory} />
       )}
     </div>
